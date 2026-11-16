@@ -1,0 +1,38 @@
+# Notas de trabajo (no se publican)
+prompt_claude_code_ar_series_observatory.md
+NOTAS_*
+
+# Configuración local del editor (rutas propias de esta máquina)
+*.code-workspace
+.vscode/
+
+# Datos descargados y derivados: se documenta cómo obtenerlos, no se versionan
+raw/
+data/
+results/
+*.csv
+*.sqlite
+*.sqlite3
+*.db
+*.zip
+*.parquet
+*.xlsx
+*.dta
+# Excepción: datos chicos de prueba
+!tests/fixtures/**
+
+# Python y herramientas
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Sistema
+.DS_Store

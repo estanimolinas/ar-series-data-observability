@@ -45,13 +45,13 @@ Criterio de admisión: una historia entra al backlog solo si contribuye a respon
 | T0.1.1 `git init -b main` | ✅ 2026-11-16 |
 | T0.1.2 `.gitignore` (notas, datos, workspace del editor) | ✅ 2026-11-16 |
 | T0.1.3 `user.email` local = noreply personal | ✅ 2026-11-16 |
-| T0.1.4 Primer commit (esqueleto de README y `docs/`) | pendiente |
-| T0.1.5 Crear el repositorio en GitHub (D6, D7) y hacer push | pendiente; irreversible |
+| T0.1.4 Primer commit (esqueleto de README y `docs/`) | ✅ 2026-11-16 |
+| T0.1.5 Crear el repositorio en GitHub (D6, D7) y hacer push | ✅ 2026-11-16: [estanimolinas/ar-series-data-observability](https://github.com/estanimolinas/ar-series-data-observability), público |
 
 **Criterios de aceptación**
-- [ ] `git log -1 --format='%an <%ae> | %cn <%ce>'` muestra el noreply personal como autor y como committer.
-- [ ] `git status --ignored` lista como ignorados `raw/`, `series-tiempo-metadatos.csv`, el prompt y el `.code-workspace`.
-- [ ] El repositorio remoto no contiene ningún CSV, SQLite ni ZIP (`git ls-files | grep -E '\.(csv|sqlite|zip)$'` vacío).
+- [x] `git log -1 --format='%an <%ae> | %cn <%ce>'` muestra el noreply personal como autor y como committer.
+- [x] `git status --ignored` lista como ignorados `raw/`, `series-tiempo-metadatos.csv`, el prompt y el `.code-workspace`.
+- [x] El repositorio remoto no contiene ningún CSV, SQLite ni ZIP (`git ls-files | grep -E '\.(csv|sqlite|zip)$'` vacío).
 
 ### H0.2 CI desde el primer commit
 *Como operador (U5), quiero que cada push corra lint y tests, para que el estado del README refleje el código real.*
@@ -105,7 +105,7 @@ Cada tarea se cierra con la respuesta y su evidencia en `docs/hallazgos.md`.
 
 | Tarea | Pregunta | Estado |
 |---|---|---|
-| TH.1 | Fecha y cadencia de generación del dump de metadatos | ⚠️ `Last-Modified` 2026-08-25 (medido el 2026-11-11); cadencia desconocida |
+| TH.1 | Fecha y cadencia de generación del dump de metadatos | ⚠️ `Last-Modified` 2026-08-25 05:39:24 GMT, con el mismo `etag`, el 2026-11-11 y el 2026-11-16; cadencia desconocida. `Last-Modified` puede ser la fecha de subida al almacenamiento y no la de generación |
 | TH.2 | Cómo se calculan `serie_actualizada` y `serie_dias_no_cubiertos` | pendiente (leer `apps/management`, `meta_keys`) |
 | TH.3 | Rate limits y robots.txt de la API de Series y del BCRA | pendiente |
 | TH.4 | Tamaño del catálogo BCRA v4.0 y su relación con las series congeladas | pendiente |
@@ -126,7 +126,7 @@ Cada tarea se cierra con la respuesta y su evidencia en `docs/hallazgos.md`.
 
 Se adelanta a Dagster y Postgres: un script autónomo alcanza. Corre en GitHub Actions ([ADR 0001](adr/0001-archivador-en-github-actions.md)).
 
-- T1.1.0 Prueba de alcance: un workflow manual (`workflow_dispatch`) que hace un `HEAD` al dump de metadatos y al SQLite (`series-tiempo-sqlite.zip`) desde un runner de GitHub y registra el código, la URL final, el tamaño, el `Last-Modified` y el tiempo de respuesta. Si no llega, se revisa el ADR antes de seguir. El tamaño del SQLite se compara con la copia local (2.317.786 bytes) para confirmar su origen.
+- T1.1.0 ✅ 2026-11-16 (resultado en el [ADR 0001](adr/0001-archivador-en-github-actions.md#verificación)). Prueba de alcance: un workflow manual (`workflow_dispatch`) que hace un `HEAD` al dump de metadatos y al SQLite (`series-tiempo-sqlite.zip`) desde un runner de GitHub y registra el código, la URL final, el tamaño, el `Last-Modified` y el tiempo de respuesta. Si no llega, se revisa el ADR antes de seguir. El tamaño del SQLite se compara con la copia local (2.317.786 bytes) para confirmar su origen.
 - T1.1.1 Script `archive_dump`: GET condicional con `If-None-Match` (✅ responde `304` sin cambios, 2026-11-11), sigue redirecciones y registra la URL final, el ETag, el `Last-Modified`, el sha256 y el tamaño.
 - T1.1.2 Validación antes de guardar: cuerpo no vacío, `content-type` CSV, no HTML, el encabezado tiene las 29 columnas esperadas.
 - T1.1.3 Snapshot nuevo → asset de un Release nombrado por su sha256. Manifest (JSON Lines) commiteado por el workflow, con una línea por consulta, haya cambios o no.

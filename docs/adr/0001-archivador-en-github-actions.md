@@ -1,6 +1,6 @@
 # ADR 0001 — Archivador del dump en GitHub Actions
 
-- **Estado:** propuesto (2026-11-16)
+- **Estado:** aceptado (2026-11-16). La prueba T1.1.0 confirmó que un runner de GitHub llega a los dos dumps (ver "Verificación").
 - **Decisiones relacionadas:** D9, D10 en [`backlog.md`](../backlog.md)
 
 ## Contexto
@@ -10,7 +10,7 @@ La pregunta rectora necesita una historia del dump de metadatos: sin snapshots s
 Hechos conocidos:
 - ✅ El dump responde `304` a un GET condicional con `If-None-Match` (2026-11-11). Se puede consultar a diario sin descargarlo si no cambió.
 - ✅ Pesa 26.399.502 bytes (copia del 2026-11-11).
-- ⚠️ No se probó si los runners de GitHub llegan a `apis.datos.gob.ar`.
+- ✅ Los runners de GitHub llegan a `apis.datos.gob.ar` (T1.1.0, 2026-11-16; ver "Verificación").
 
 ## Alternativas
 
@@ -33,6 +33,19 @@ El archivador corre como workflow programado de GitHub Actions. Cada snapshot nu
 - Los snapshots quedan fuera del historial de git y el repositorio no crece por los datos.
 - El manifest es la fuente de verdad de qué se consultó y cuándo. Los snapshots son reproducibles por su hash.
 - Al migrar a la orquestación definitiva (H1.4), se importa el manifest y los snapshots quedan donde están.
+
+## Verificación
+
+Corrida manual del workflow `probe-sources` (2026-11-16 22:41 UTC), `HEAD` con redirecciones:
+
+| URL documentada | Cadena de respuestas | `content-length` | `last-modified` | `etag` |
+|---|---|---|---|---|
+| `/series/api/dump/series-tiempo-metadatos.csv` | 301 → 302 → 200 (1,1 s) | 26.399.502 | 2026-08-25 05:39:24 GMT | `"539a83fed6aa0b13ff29314ad04e3dd0-6"` |
+| `/series/api/dump/series-tiempo-sqlite.zip` | 301 → 302 → 200 (2,1 s) | 2.317.786 | 2019-06-19 03:41:45 GMT | `"a29c59cad18e4d85c65601ca64ed7721"` |
+
+Implicaciones para el diseño:
+- El 301 solo agrega la barra final; el 302 lleva a una URL firmada de un almacenamiento compatible con S3, con vencimiento de 7 días. La URL final cambia en cada consulta: el manifest registra la URL documentada y el `etag`, no la URL firmada.
+- La cadena de consulta de la URL firmada contiene un identificador de clave de acceso de terceros. Los logs del proyecto la ocultan.
 
 ## Qué la invalidaría
 

@@ -29,15 +29,23 @@ jobs:
             echo "Run started (UTC): $(date -u +%Y-%m-%dT%H:%M:%SZ)"
           } >> "$GITHUB_STEP_SUMMARY"
 
+          # Redirects point to pre-signed storage URLs whose query string carries a third-party
+          # access key ID and signature. Strip every query string before printing anything.
+          redact() { sed -E 's/\?[^ ]*/?<query-redacted>/g'; }
+
           status=0
           for url in "${urls[@]}"; do
             echo "=== $url"
+            raw_headers=$(mktemp)
             headers=$(mktemp)
             metrics=$(curl --head --location --silent --show-error --max-time 60 \
                            --user-agent "$USER_AGENT" \
-                           --dump-header "$headers" --output /dev/null \
+                           --dump-header "$raw_headers" --output /dev/null \
                            --write-out 'http_code=%{http_code} url_effective=%{url_effective} num_redirects=%{num_redirects} time_total=%{time_total}s' \
                            "$url") || status=1
+            redact < "$raw_headers" > "$headers"
+            rm -f "$raw_headers"
+            metrics=$(printf '%s' "$metrics" | redact)
             cat "$headers"
             echo "$metrics"
             {

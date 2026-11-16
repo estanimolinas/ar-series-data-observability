@@ -1,0 +1,54 @@
+# T1.1.0: checks whether a GitHub-hosted runner can reach the data sources.
+# Manual trigger only. Sends HEAD requests (no download) and writes the result to the run summary.
+name: probe-sources
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      USER_AGENT: "ar-series-data-observability (+https://github.com/estanimolinas/ar-series-data-observability)"
+    steps:
+      - name: HEAD requests to the published dumps
+        shell: bash
+        run: |
+          set -uo pipefail
+          urls=(
+            "https://apis.datos.gob.ar/series/api/dump/series-tiempo-metadatos.csv"
+            "https://apis.datos.gob.ar/series/api/dump/series-tiempo-sqlite.zip"
+          )
+          {
+            echo "## probe-sources"
+            echo
+            echo "Run started (UTC): $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          status=0
+          for url in "${urls[@]}"; do
+            echo "=== $url"
+            headers=$(mktemp)
+            metrics=$(curl --head --location --silent --show-error --max-time 60 \
+                           --user-agent "$USER_AGENT" \
+                           --dump-header "$headers" --output /dev/null \
+                           --write-out 'http_code=%{http_code} url_effective=%{url_effective} num_redirects=%{num_redirects} time_total=%{time_total}s' \
+                           "$url") || status=1
+            cat "$headers"
+            echo "$metrics"
+            {
+              echo
+              echo "### \`$url\`"
+              echo
+              echo "\`$metrics\`"
+              echo
+              echo '```'
+              grep -iE '^(HTTP/|location:|content-type:|content-length:|last-modified:|etag:|cache-control:)' "$headers" || true
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          done
+          exit $status
